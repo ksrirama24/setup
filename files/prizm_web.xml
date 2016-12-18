@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee     http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+    <description>Document Viewer</description>
+    <display-name>Document Viewer</display-name>
+  
+    <!-- <filter>
+  <display-name>validateSAML</display-name>
+  <filter-name>validateSAML</filter-name>
+  <filter-class>com.accusoft.pccis.sample.core.SMALTokenValidator</filter-class>
+ </filter> -->
+   
+     <filter>
+  <display-name>loadSalt</display-name>
+  <filter-name>loadSalt</filter-name>
+  <filter-class>com.accusoft.pccis.sample.core.LoadSalt</filter-class>
+ </filter>
+ 
+ <filter>
+  <display-name>validateSalt</display-name>
+  <filter-name>validateSalt</filter-name>
+  <filter-class>com.accusoft.pccis.sample.core.ValidateSalt</filter-class>
+ </filter>
+ 
+  <!--  <filter-mapping>
+   <filter-name>validateSAML</filter-name>
+  <url-pattern>*</url-pattern>
+ </filter-mapping>   -->
+ 
+ <filter-mapping>
+  <filter-name>loadSalt</filter-name>
+  <url-pattern>*</url-pattern>
+ </filter-mapping>
+ <filter-mapping>
+  <filter-name>validateSalt</filter-name>
+  <url-pattern>/preventCsrfServlet</url-pattern>
+ </filter-mapping>
+ 
+    <servlet>
+        <servlet-name>pcc.jsp</servlet-name>
+        <jsp-file>/full-viewer-sample/viewer-webtier/pcc.jsp</jsp-file>
+        <load-on-startup>0</load-on-startup>
+    </servlet>
+    <servlet>
+        <servlet-name>FileUploadHandler</servlet-name>
+        <servlet-class>com.accusoft.pccis.sample.html5.FileUploadHandler</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>createSession.jsp</servlet-name>
+        <jsp-file>/createSession.jsp</jsp-file>
+    </servlet>
+    <!--    
+        Source document location.
+        If this location is on network, make sure that PrizmService is running 
+        under a network account.
+        If this location is on network, do not pass mapped drive path, instead pass 
+        absolute path like: //computername/share/
+    -->
+    <context-param>
+        <description>Path where the source files are located</description>
+        <param-name>DocumentPath</param-name>
+        <param-value>C:/Prizm/work/conversion/</param-value>
+    </context-param>
+    <context-param>
+        <description>Path where the temporary markup files are located</description>
+        <param-name>MarkupsPath</param-name>
+        <param-value>C:/Prizm/work/Markups/</param-value>
+    </context-param>
+	
+	<context-param>
+        <description>Path where the image stamps are located</description>
+        <param-name>ImageStampPath</param-name>
+        <param-value>C:/Prizm/work/ImageStamp/</param-value>
+    </context-param>
+    <context-param>
+        <description>Linux path where the source files are located</description>
+        <param-name>LinuxDocumentPath</param-name>
+      <!-- make sure the webserver has read/write permissions for the following folder.
+      drag/drop of files operation being introduced in the sample for ver 10.0 requires this folder 
+      to have read/write permissions.
+      -->
+        <param-value>/usr/share/prizm/Samples/Documents/</param-value>
+    </context-param>
+    <context-param>
+        <description>Linux path where the temporary markup files are located</description>
+        <param-name>LinuxMarkupsPath</param-name>
+        <param-value>/usr/share/prizm/Samples/markup/</param-value>
+    </context-param>
+    <context-param>
+        <description>Linux path where the image stamps files are located</description>
+        <param-name>LinuxImageStampPath</param-name>
+        <param-value>/usr/share/prizm/Samples/imageStamp/</param-value>
+    </context-param>
+    <context-param>
+        <description>Valid image files that are supported</description>
+        <param-name>ValidImageStampTypes</param-name>
+        <param-value>png,jpg,jpeg,gif</param-value>
+    </context-param>
+    <context-param>
+        <description>Prizm Service Proxy REST API web service scheme</description>
+        <param-name>WebServiceScheme</param-name>
+        <param-value>http</param-value>
+    </context-param>
+    <context-param>
+        <description>Prizm Service Proxy REST API web service hostname</description>
+        <param-name>WebServiceHost</param-name>
+        <param-value>192.168.4.194</param-value>
+    </context-param>
+    <context-param>
+        <description>Prizm Service Proxy REST API web service port number</description>
+        <param-name>WebServicePort</param-name>
+        <param-value>18681</param-value>
+    </context-param>
+    <context-param>
+        <description>Prizm Service Proxy REST API web service path info</description>
+        <param-name>WebServicePath</param-name>
+        <param-value>PCCIS/V1</param-value>
+    </context-param>
+    <context-param>
+        <description>Prizm Service Proxy V2 REST API web service path info</description>
+        <param-name>WebServiceV2Path</param-name>
+        <param-value>v2</param-value>
+    </context-param>    
+    <context-param>
+        <description>Enables or disables the option to secure document path</description>
+        <param-name>EnableDocumentPath</param-name>
+        <param-value>false</param-value>
+    </context-param>
+    <servlet>
+        <servlet-name>book-reader-pcc.jsp</servlet-name>
+        <jsp-file>/book-reader-sample/viewer-webtier/pcc.jsp</jsp-file>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FileUploadHandler</servlet-name>
+        <url-pattern>/DocUpload</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>createSession.jsp</servlet-name>
+        <url-pattern>/createSession.jsp/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>pcc.jsp</servlet-name>
+        <url-pattern>/pcc.jsp/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>book-reader-pcc.jsp</servlet-name>
+        <url-pattern>/book-reader-sample/book-reader-pcc.jsp/*</url-pattern>
+    </servlet-mapping>
+    
+    <error-page>
+  <error-code>404</error-code>
+  <location>/WEB-INF/pages/errorpage.jsp</location>
+ </error-page>
+ <error-page>
+  <error-code>405</error-code>
+  <location>/WEB-INF/pages/errorpage.jsp</location>
+ </error-page>
+ <error-page>
+  <error-code>403</error-code>
+  <location>/WEB-INF/pages/errorpage.jsp</location>
+ </error-page>
+ <error-page>
+  <error-code>500</error-code>
+  <location>/WEB-INF/pages/errorpage.jsp</location>
+ </error-page>
+ 
+</web-app>

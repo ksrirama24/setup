@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!DOCTYPE web-app PUBLIC
+   "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+   "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+	<listener>
+		<listener-class>com.sessioncheck.SessionCheckServlet</listener-class>
+	</listener>
+
+   <servlet>
+     <servlet-name>PicketLinkSTS</servlet-name>
+     <servlet-class>org.picketlink.identity.federation.core.wstrust.PicketLinkSTS</servlet-class>
+   </servlet>
+  
+   
+	<servlet-mapping>
+      <servlet-name>PicketLinkSTS</servlet-name>
+      <url-pattern>/*</url-pattern>
+   </servlet-mapping>
+
+	
+   
+
+ <session-config>
+    <session-timeout>1</session-timeout>
+</session-config>
+
+  <security-constraint>
+     <web-resource-collection>
+       <web-resource-name>TokenService</web-resource-name>
+       <url-pattern>/*</url-pattern>
+       <http-method>GET</http-method>
+       <http-method>POST</http-method>
+     </web-resource-collection>
+    
+	
+	<auth-constraint>
+        <role-name>*</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+        <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+		<!-- <transport-guarantee>NONE</transport-guarantee> -->
+    </user-data-constraint>
+	
+   </security-constraint>
+	
+	<login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>PicketLinkSTSRealm</realm-name>
+    </login-config>
+   
+   <security-role>
+    <role-name>*</role-name>
+   </security-role>
+
+
+   
+</web-app>

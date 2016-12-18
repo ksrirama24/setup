@@ -1,0 +1,451 @@
+#####################################################################################
+#
+# Common Functions
+#
+#####################################################################################
+
+
+### Function to run an OS command
+runCmd()
+{
+	command="$1"
+	echo
+	echo "Running the command : $command"
+	$command
+	RC=$?
+	if [ $RC -ne 0 ]
+	then
+		echo
+		echo "ERROR : Failed to run the command $command "
+		echo "Exit code : $RC"
+		echo
+		exit $RC
+	fi
+	echo "Done."
+	echo
+	return $RC
+}
+# End of runCmd()
+
+datestamp=`date +%Y-%b-%d_%H-%M-%S-%N`
+
+### Function to backup a file or directory
+backupFile()
+{
+	file=$1
+	isSudo=$2
+	fileTimeStamp=${file}_${datestamp}
+	if [ -e ${file} ]
+	then
+		echo
+		echo "$file already exists, renaming it as $fileTimeStamp"
+		runCmd "$isSudo mv $file $fileTimeStamp"
+	fi
+}
+
+
+### Function to update the key-value in a file
+updatePairValue ()
+{
+	file=$1
+	key=$2	
+	value=$3
+	oldLine=`grep ^${key}= $file`
+#	currValue=`echo $oldLine |awk -F'=' '{print$2}'`
+        currValue=${oldLine#${key}=}
+
+
+	
+	if [ "x${oldLine}" == "x" ]
+	then
+		echo "WARNING : Key $key is NOT FOUND in the file $file."
+		return
+	fi	
+
+	echo
+	echo "Current $key value in $file : $currValue"
+	echo
+
+	if [ "$currValue" == "$value" ]
+	then
+		echo
+		echo "INFO: $key already has value \"$value\", no action required"
+		echo
+		return
+	fi
+	echo "INFO: $key needs to be updated with value \"$value\", let us do it now....."
+
+
+	newLine="${key}=${value}"
+
+	echo
+	echo "Updating the key-value in the file $file ....."
+	echo
+	echo "OLD LINE : $oldLine"
+	echo
+	echo "NEW LINE : $newLine"
+	echo
+### Replace the line using perl inline option
+#                echo "perl -p -i -e 's+$oldLine+$newLine+g' $file" > /tmp/${datestamp}_cmd.sh
+#                chmod 755 /tmp/${datestamp}_cmd.sh
+#                echo "Running the command :"
+#                cat /tmp/${datestamp}_cmd.sh
+#                /tmp/${datestamp}_cmd.sh
+		tempFile_func="/tmp/.temp_replace.out"
+#		runCmd "rm -f /tmp/${datestamp}_cmd.sh"
+		runCmd "rm -f $tempFile_func"
+#		echo "Running the command :"
+#		echo "sed 's+${oldLine}+${newLine}+g' $file > $tempFile_func" 
+#		echo
+#		echo "sed \'s+${oldLine}+${newLine}+g\' $file > $tempFile_func" > /tmp/${datestamp}_cmd.sh
+#		echo
+#		echo "Running the command :"
+#		echo "mv $tempFile_func $file"
+#		echo
+#		echo "cp $tempFile_func $file" >> /tmp/${datestamp}_cmd.sh
+#		echo
+#		runCmd "chmod 755 /tmp/${datestamp}_cmd.sh"
+#		/tmp/${datestamp}_cmd.sh
+#		echo "sed -i 's/${oldLine}/${newLine}/g' $file" 
+#		sed -i 's/${oldLine}/${newLine}/g' $file
+
+### sed and perl are not working properly for find and replace
+### Let us parse line by line and replace oldLine with new Line
+		while IFS='' read -r line || [[ -n "$line" ]];
+		do
+			if [ "$oldLine" == "$line" ]
+			then
+				echo "$newLine" >> $tempFile_func
+			else
+				echo "$line" >> $tempFile_func
+			fi	
+
+		done <$file
+		runCmd "mv $tempFile_func $file"
+
+### Let us remove the temporary files now	
+		echo
+		runCmd "rm -f $tempFile_func"
+		echo "Done."
+		echo
+
+	echo "Line after updating the value : "
+	grep ^${key}= $file
+	echo
+	echo "Done updating $key value to \"$value\""
+	echo 
+	echo 
+
+} # End of function updatePairValue
+
+
+### Function to update the key-value in a file with space as a separator
+updateKeyValueWithSpace ()
+{
+	file=$1
+	key=$2	
+	value=$3
+	oldLine=`grep ^\s*${key} $file`
+	currValue=`echo $oldLine |awk '{print $2}'`
+	
+	if [ "x${oldLine}" == "x" ]
+	then
+		echo "WARNING : Key $key is NOT FOUND in the file $file."
+		return
+	fi	
+
+	echo
+	echo "Current $key value in $file : $currValue"
+	echo
+
+	if [ "$currValue" == "$value" ]
+	then
+		echo
+		echo "INFO: $key already has value \"$value\", no action required"
+		echo
+		return
+	fi
+	echo "INFO: $key needs to be updated with value \"$value\", let us do it now....."
+
+
+	newLine="${key} ${value}"
+
+	echo
+	echo "Updating the key-value in the file $file ....."
+	echo
+	echo "OLD LINE : $oldLine"
+	echo
+	echo "NEW LINE : $newLine"
+	echo
+		tempFile_func="/tmp/.temp_replace.out"
+		runCmd "rm -f $tempFile_func"
+
+### sed and perl are not working properly for find and replace
+### Let us parse line by line and replace oldLine with newLine
+		while IFS='' read -r line || [[ -n "$line" ]];
+		do
+			if [ "$oldLine" == "$line" ]
+			then
+				echo "$newLine" >> $tempFile_func
+			else
+				echo "$line" >> $tempFile_func
+			fi	
+
+		done <$file
+		runCmd "mv $tempFile_func $file"
+
+### Let us remove the temporary files now	
+		echo
+		runCmd "rm -f $tempFile_func"
+		echo "Done."
+		echo
+
+	echo "Let us check the line now ....."
+	echo "Line after updating the value : "
+	grep ^${key}= $file
+	echo
+	echo "Done updating $key value to \"$value\""
+	echo 
+	echo 
+
+} # End of function updatePairValue
+
+### Function to update the key-value in a file
+replaceText ()
+{
+	file=$1
+	oldLine=$2	
+	newLine=$3
+
+	grep ${oldLine} $file > /dev/null
+	if [ $? -ne  0 ]
+	then
+		echo
+		echo "ERROR : Old line $oldLine is NOT FOUND in $file"
+		echo
+		exit 1
+
+	fi
+	
+	if [ "${oldLine}" == "${newLine}" ]
+	then
+		echo
+		echo "INFO : Old line and New line are same. No action required."
+		echo
+		echo "OLD LINE : $oldLine"
+		echo
+		echo "NEW LINE : $newLine"
+		echo
+		return
+	fi	
+
+	echo "Let us update the file now....."
+
+	echo
+	echo "OLD LINE : $oldLine"
+	echo
+	echo "NEW LINE : $newLine"
+	echo
+### Replace the line using perl inline option
+#                echo "perl -p -i -e 's+$oldLine+$newLine+g' $file" > /tmp/${datestamp}_cmd.sh
+#                chmod 755 /tmp/${datestamp}_cmd.sh
+#                echo "Running the command :"
+#                cat /tmp/${datestamp}_cmd.sh
+#                /tmp/${datestamp}_cmd.sh
+		tempFile_func="/tmp/.temp_replace.out"
+		runCmd "rm -f /tmp/${datestamp}_cmd.sh"
+		runCmd "rm -f $tempFile_func"
+		echo "Running the command :"
+		echo "sed 's+$oldLine+$newLine+g' $file > $tempFile_func" 
+		echo
+		echo "sed 's+$oldLine+$newLine+g' $file > $tempFile_func" > /tmp/${datestamp}_cmd.sh
+		echo
+		echo "Running the command :"
+		echo "mv $tempFile_func $file"
+		echo
+		echo "mv $tempFile_func $file" >> /tmp/${datestamp}_cmd.sh
+		echo
+		runCmd "chmod 755 /tmp/${datestamp}_cmd.sh"
+		/tmp/${datestamp}_cmd.sh
+
+### Let us remove the temporary files now	
+		echo
+		runCmd "rm -f /tmp/${datestamp}_cmd.sh"
+		runCmd "rm -f $tempFile_func"
+		echo "Done."
+		echo
+
+### Grep will hang if new text to be replaced is NULL
+	if [ "x${newLine}" != "x" ]
+	then
+		echo
+		echo "Let us check the new line in the file after updating....."
+		echo
+		echo "Running the command :"
+		echo "grep ${newLine} $file"
+		grep ${newLine} $file
+		echo "Done."
+		echo 
+		echo 
+	fi
+}
+
+
+### Function to find and replace a line
+replaceLine ()
+{
+	file=$1
+	oldLine=$2	
+	newLine=$3
+
+	lineFound="0"
+	
+	if [ "${oldLine}" == "${newLine}" ]
+	then
+		echo
+		echo "INFO : Old line and New line are same. No action required."
+		echo
+		echo "OLD LINE : $oldLine"
+		echo
+		echo "NEW LINE : $newLine"
+		echo
+		return
+	fi	
+
+	echo "Let us update the file now....."
+
+	echo
+	echo "OLD LINE : $oldLine"
+	echo
+	echo "NEW LINE : $newLine"
+	echo
+
+		tempFile_func="/tmp/.temp_replace.out"
+		runCmd "rm -f $tempFile_func"
+### sed and perl are not working properly for find and replace
+### Let us parse line by line and replace oldLine with new Line
+		while IFS='' read -r line || [[ -n "$line" ]];
+		do
+			if [ "$oldLine" == "$line" ]
+			then
+				echo "$newLine" >> $tempFile_func
+				lineFound="1"
+			else
+				echo "$line" >> $tempFile_func
+			fi	
+
+		done <$file
+		runCmd "mv $tempFile_func $file"
+
+### Let us remove the temporary files now	
+		echo
+		runCmd "rm -f $tempFile_func"
+		echo "Done."
+		echo
+	if [ $lineFound == "0" ]
+	then
+		echo
+		echo "ERROR : $oldLine is NOT FOUND in the file $file"
+		echo
+		exit 1
+	fi
+
+	echo "Done."
+	echo 
+	echo 
+}
+
+
+### Function to verify the file is not modified in the latest install
+
+compareFile()
+{
+	oldFile=$1
+	newFile=$2
+	
+	command="diff $oldFile $newFile"
+	echo
+	echo "Running the command :"	
+	echo $command
+	echo
+	$command
+
+	return $?
+
+} # End of function compareFile
+
+
+### Function to return Value of a Key
+#
+# Returns first value found in the properties file
+#
+getKeyValue()
+{
+	propFile=$1
+	key=$2
+#	value=`grep ^$key $propFile | head -1 | awk -F'=' '{print \$2}'`
+	value=`grep ^$key $propFile | head -1`
+	value=${value#${key}=}
+	defaultValue=$3
+
+### Delete spaces
+	value=`echo $value | sed 's+\s*++g'`
+
+	if [ "x${value}" == "x" ] && [ "x${defaultValue}" == "x" ]
+	then
+		echo
+		echo "ERROR: Value of $key is NOT defined in the properties file."
+		echo
+		exit 1
+	fi
+
+### Set default value
+	if [ "x${value}" == "x" ]
+	then
+		value=$defaultValue	
+	fi
+
+
+} # End of function getKeyValue
+
+
+
+### Start time
+
+startTime()
+{
+	date=`date`
+	echo	 
+	echo "Script Start time : $date"
+	echo
+}
+
+### End time
+
+endTime()
+{
+	date=`date`
+	echo	 
+	echo "Script End time : $date"
+	echo
+}
+
+checkBash()
+{
+	if [ "X${BASH}" != "X/bin/bash" ]
+	then
+		echo
+		echo "ERROR: Script requires to be run in bash shell. Please run it as ./<script_name> or use bash"
+		echo
+		exit 1
+	else
+		echo
+		echo "Running in $SHELL shell"
+		echo
+	fi
+
+
+} #Function to check bash
+
+
+###########################################################################################

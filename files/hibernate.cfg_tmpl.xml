@@ -1,0 +1,32 @@
+
+<!DOCTYPE hibernate-configuration PUBLIC
+	"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+	<session-factory>
+		<property name="connection.driver_class">com.jnetdirect.jsql.JSQLDriver</property>
+		<property name="connection.url">jdbc:JSQLConnect://%db_host%:%db_port%/databaseName=%db_name%/selectMethod=Cursor/asciiStringParameters=true%ssl_value%</property>
+		<property name="connection.user">%db_username%</property>
+		<property name="connection.password">%db_password%</property>
+		<property name="show_sql">false</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.SQLServer2008Dialect</property>
+		<property name="hbm2ddl.auto">update</property>
+		<mapping class="com.Enrollment.Domain.AccountHistoryEvents" />
+		<mapping class="com.Enrollment.Domain.PadmAccount" />
+		<mapping class="com.Enrollment.Domain.Admcase" />
+		<mapping class="com.Enrollment.Domain.OISUser" />
+		<mapping class="com.Enrollment.Domain.OISAttachment" />
+		<mapping class="com.Enrollment.Domain.OISNote" />
+		<mapping class="com.Enrollment.Domain.MDMSearchProviders" />
+		<mapping class="com.Enrollment.Domain.MDMAlert" />
+		<mapping class="com.Enrollment.Domain.AlertResolution" />
+		<mapping class="com.Enrollment.Domain.EDMAccountInternalUse" />
+		<mapping class="com.Enrollment.Domain.StatusBGColor" />
+		<mapping class="com.Enrollment.Domain.DisclosedView"/>
+		<mapping class="com.Enrollment.Domain.LKScreening"/>
+		<!-- <mapping class="com.Enrollment.Domain.InputDocHistory" />
+		<mapping class="com.Enrollment.Domain.IDocGroupHistoryy" />
+		<mapping class="com.Enrollment.Domain.IDocRenderingHistoryy" />
+		<mapping class="com.Enrollment.Domain.IDocMocaHistoryy" /> -->
+	</session-factory>
+</hibernate-configuration>
